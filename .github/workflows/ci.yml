@@ -1,0 +1,69 @@
+name: Cloud Build
+
+on:
+  push:
+    branches:
+      - main  # Trigger on pushes to the main branch
+
+permissions:
+  contents: read
+
+jobs:
+  push_to_gar:
+    name: Push Docker Image to Google Artifact Registry
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Google Cloud SDK
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+
+      - name: Set up Docker with Google Artifact Registry
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      # Step 3: Build and Push Docker Image
+      - name: Build and Push Docker Image
+        env:
+          GAR_LOCATION: us-central1
+          GAR_REPO: unbound
+          IMAGE_NAME: unbound-image
+          PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
+        run: |
+          # Build Docker image
+          docker build -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE_NAME:latest .
+          
+          # Push Docker image to Google Artifact Registry
+          docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE_NAME:latest
+
+      # Step 4: Verify the pushed image (optional)
+      - name: Verify Docker Image
+        env:
+          GAR_LOCATION: us-central1
+          GAR_REPO: unbound
+          IMAGE_NAME: unbound-image
+          PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
+        run: |
+          gcloud artifacts docker images list $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$GAR_REPO --format="table[box](name, version)"
+      # Step 5: Install gke-gcloud-auth-plugin
+      - name: install the gcloud cli
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GOOGLE_PROJECT_ID }}
+          service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          install_components: 'gke-gcloud-auth-plugin'
+          export_default_credentials: true
+      
+      # Step 6: Deploy to GKE
+      - name: Deploy to GKE
+        env:
+          GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT_ID }}
+        run: |
+          gcloud container clusters get-credentials autopilot-cluster-1 --region us-central1
+          kubectl apply -f resources.yaml
