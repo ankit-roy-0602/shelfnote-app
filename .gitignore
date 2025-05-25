@@ -96,3 +96,4 @@ Thumbs.db
 
 # npm pack output
 *.tgz
+key.json
