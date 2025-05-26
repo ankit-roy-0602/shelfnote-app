@@ -32,8 +32,8 @@ jobs:
       - name: Build and Push Docker Image
         env:
           GAR_LOCATION: us-central1
-          GAR_REPO: unbound
-          IMAGE_NAME: unbound-image
+          GAR_REPO: frontend-ocean
+          IMAGE_NAME: frontend-ocean-image
           PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
         run: |
           # Build Docker image
@@ -46,8 +46,8 @@ jobs:
       - name: Verify Docker Image
         env:
           GAR_LOCATION: us-central1
-          GAR_REPO: unbound
-          IMAGE_NAME: unbound-image
+          GAR_REPO: frontend-ocean
+          IMAGE_NAME: frontend-ocean-image
           PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
         run: |
           gcloud artifacts docker images list $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$GAR_REPO --format="table[box](name, version)"
