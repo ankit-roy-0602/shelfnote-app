@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-ocean-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: frontend-ocean-app
+  ports:
+  - port: 80
+    targetPort: 3000 # Map external port 80 to container port 3000
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-ocean-deployment
+  labels:
+    app: frontend-ocean-app
+spec:
+  replicas: 2 # Increased replicas for high availability
+  selector:
+    matchLabels:
+      app: frontend-ocean-app
+  template:
+    metadata:
+      labels:
+        app: frontend-ocean-app
+    spec:
+      containers:
+      - name: frontend-ocean-container
+        image: us-central1-docker.pkg.dev/shelfnote-np/frontend-ocean/frontend-ocean-image:latest
+        ports:
+        - containerPort: 3000 # Match the port exposed in the Dockerfile
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20
