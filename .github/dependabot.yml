@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: "npm" # or "pip", "maven", etc.
+    directory: "/"           # Location of package files
+    schedule:
+      interval: "weekly"     # "daily", "weekly", or "monthly"
+    open-pull-requests-limit: 5
+    allow:
+      - dependency-type: "all"  # could be "direct" or "indirect"
+    ignore:
+      - dependency-name: "some-package"
+        versions: ["1.x.x"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+# Optional: Enable security updates (Dependabot alerts use this under the hood)
+# Security updates are enabled by default on most repos
+# But you can configure settings via GitHub UI under repo → Settings → Security
